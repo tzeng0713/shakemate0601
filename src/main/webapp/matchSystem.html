@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <title>配對系統</title>
+    <!-- Swiper 的 CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+    <!-- Swiper 的 JS -->
+    <script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- 🔹 頂部選單 -->
+    <header class="header">
+        <div class="header__logo">
+            <img src="img/logoText.png" alt="">
+        </div>
+        <nav class="header__nav">
+            <ul class="header__list">
+                <li class="header__item"><a href="matchSystem.html">配對</a></li>
+                <li class="header__item"><a href="chatroom.html">聊天室</a></li>
+                <li class="header__item"><a href="#">揪團</a></li>
+                <li class="header__item"><a href="#">商城</a></li>
+                <li class="header__item"><a href="#">會員專區</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <!-- 🔹 配對主內容區 -->
+    <main class="match">
+        <!-- 🔹 上方名字與基本資料 -->
+        <div class="match__header">
+            <h2 class="match__name">油條</h2>
+            <p class="match__info">3歲・臘腸座</p>
+        </div>
+
+        <!-- 配對卡片滑動容器 -->
+        <div class="swiper match__card">
+            <div class="swiper-wrapper">
+
+                <!-- 🧡 第一頁：油條的基本資料 -->
+                <div class="swiper-slide">
+                    <div class="match__body">
+                        <div class="match__avatar-box">
+                            <img src="img/yo.jpg" alt="配對對象照片" class="match__avatar" />
+                        </div>
+                        <div class="match__details">
+                            <div class="match__field">
+                                <h3 class="match__field-title">人格特質</h3>
+                                <p class="match__field-content">活潑開朗、愛分享</p>
+                            </div>
+                            <div class="match__field">
+                                <h3 class="match__field-title">興趣專長</h3>
+                                <p class="match__field-content">喜歡散步、愛吃肉乾的小臘腸🐶</p>
+                            </div>
+                            <div class="match__field">
+                                <h3 class="match__field-title">個人簡介</h3>
+                                <p class="match__field-content">
+                                    我是一隻小臘腸，希望找到一起曬太陽的人！
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🧡 第二頁：油條的生活照 / 更多介紹 -->
+                <div class="swiper-slide">
+                    <div class="match__body">
+                        <div class="match__avatar-box">
+                            <img src="img/yo2.jpg" alt="配對對象照片" class="match__avatar" />
+                        </div>
+                        <div class="match__details">
+                            <div class="match__field">
+                                <h3 class="match__field-title">最近喜歡的活動</h3>
+                                <p class="match__field-content">河堤奔跑、草地滾滾🐾</p>
+                            </div>
+                            <div class="match__field">
+                                <h3 class="match__field-title">我的小秘密</h3>
+                                <p class="match__field-content">超怕打雷但外表很堅強！</p>
+                            </div>
+                            <div class="match__field">
+                                <h3 class="match__field-title">想認識的人</h3>
+                                <p class="match__field-content">
+                                    喜歡陽光、也願意陪我在沙發上打滾的人💖
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 🧡 第三頁可以再加... -->
+
+            </div>
+
+            <!-- 分頁點點 -->
+            <div class="swiper-pagination"></div>
+        </div>
+
+        <!-- 🔹 翻頁按鈕區塊
+        <div class="match__pagination">
+            <button class="match__arrow match__arrow--left" onclick="prevPage()">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="match__arrow match__arrow--right" onclick="nextPage()">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        </div> -->
+
+
+        <!-- 🔹 按鈕區 -->
+        <div class="match__actions">
+            <button onclick="sendMatch('like', 7)" class="match__button match__button--like">抖一下</button>
+            <button onclick="sendMatch('dislike', 7)" class="match__button match__button--dislike">不喜歡</button>
+        </div>
+    </main>
+    <script src="js/matchSystem.js"></script>
+</body>
+
+</html>

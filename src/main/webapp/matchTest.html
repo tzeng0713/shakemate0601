@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<title>配對測試頁面</title>
+</head>
+<body>
+	<h2>Match 測試</h2>
+	<button onclick="sendMatch('like', 9)">喜歡</button>
+	<button onclick="sendMatch('dislike', 9)">不喜歡</button>
+
+	<h2>聊天室清單</h2>
+	<ul id="chatRoomList"></ul>
+
+	<script>
+    function sendMatch(action, targetId) {
+      fetch("MatchServlet", {
+        method: "POST", 
+        headers: {
+        	"Content-Type": "application/x-www-form-urlencoded",
+        },
+		body: `action=${action}&targetId=${targetId}`
+      })
+        .then((res) => res.text())
+        .then((data) => {
+          console.log("後端有回應喔！");
+        })
+        .catch((err) => {
+          console.error("錯誤發生：", err);
+        });
+    }
+    
+   
+
+    
+ 	// 取得聊天室清單資料並顯示在畫面上
+    function loadChatRooms(){
+   	 fetch("ChatRoomListServlet")
+   	 	.then(res => res.json())
+   	 	.then(data => {
+   	 		const ul = document.getElementById("chat-list");
+   	 		ul.innerHTML = ""; // 清空舊的清單
+   	 		
+   	 		data.forEach(room => {
+   	 			const otherId = (room.user1Id === currentUserId) ? room.user2Id : room.user1Id;
+   			 	const otherName = userMap[otherId]?.name || "未知";
+   			 	const avatar = userMap[otherId]?.avatar || "default.jpg";
+   			 	const li = document.createElement("li");
+	   			li.classList.add("chat-item");
+	   			li.dataset.roomid = room.roomId;
+	   			li.dataset.name = otherName;
+	   			li.onclick = () => handleRoomClick(room.roomId);
+	
+	   			li.innerHTML = `
+	   			  <img src="img/${avatar}" />
+	   			  <div class="chat-list-txt">
+	   			      <h3>${otherName}</h3>
+	   			      <p>載入中...</p>
+	   			  </div>
+	   			`;
+	   			ul.appendChild(li);
+   	 			});
+   	 	})
+   	 	.catch(error => {
+   	 		console.error("載入聊天室時出錯:", error);
+   	 	});
+    }
+ 	
+    function handleRoomClick(roomId) {
+    	  console.log("使用者點了聊天室, roomId :", roomId);
+
+    	  fetch(`ChatMessageServlet?roomId=${roomId}`)
+    	    .then(res => res.json())
+    	    .then(data => {
+    	      console.log("這個聊天室的訊息：", data);
+    	      // 🔜 這裡可以之後渲染訊息畫面
+    	    })
+    	    .catch(err => {
+    	      console.error("載入訊息時出錯：", err);
+    	    });
+    	}
+
+ 
+ 	// 一打開頁面就載入聊天室清單
+    window.addEventListener("DOMContentLoaded", loadChatRooms);
+  </script>
+</body>
+</html>
