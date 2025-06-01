@@ -1,0 +1,19 @@
+# 編譯過的 .class 檔
+*.class
+
+# Eclipse 用的雜檔
+.settings/
+.project
+.classpath
+
+# 建置輸出資料夾
+/bin/
+/build/
+/target/
+
+# macOS / Windows 系統雜物
+.DS_Store
+Thumbs.db
+
+# 日誌或暫存檔
+*.log

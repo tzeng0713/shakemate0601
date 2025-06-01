@@ -1,25 +1,22 @@
-package shakemate.controller;
+package com.shakemate.controller;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import shakemate.model.ChatMessage;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Statement;
 
-import com.google.gson.Gson;
+import com.mysql.cj.xdevapi.Result;
 
-@WebServlet("/ChatMessageServlet")
-public class ChatMessageServlet extends HttpServlet {
+@WebServlet("/MatchServlet")
+public class MatchServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	public static final String DRIVER = "com.mysql.cj.jdbc.Driver";
 	public static final String URL = "jdbc:mysql://localhost:3306/shakemate_db?serverTimezone=Asia/Taipei";
@@ -28,18 +25,31 @@ public class ChatMessageServlet extends HttpServlet {
 
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		System.out.println("🚀 ChatMessageServlet 開始執行"); // 可以設斷點在這
 
-		String roomIdStr = request.getParameter("roomId");
-		System.out.println("收到 roomId：" + roomIdStr);
-		
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+
+		// 取得前端傳來的資料
+		String action = request.getParameter("action");
+		String targetIdStr = request.getParameter("targetId");
+
+		int user1Id = 1; // 暫時將登入者 ID 寫死
+		int user2Id = Integer.parseInt(targetIdStr);
+
+		boolean isLike = "like".equals(action);
+
+		if (!isLike) {
+			System.out.println("使用者選擇不喜歡，不紀錄配對。");
+			return;
+		}
+
 		Connection con = null;
 		PreparedStatement pstmt = null;
 		ResultSet rs = null;
 
 		try {
-			int roomId = Integer.parseInt(roomIdStr);
-			
 			// 1. 載入驅動
 			Class.forName(DRIVER);
 //			System.out.println("載入成功");
@@ -49,32 +59,35 @@ public class ChatMessageServlet extends HttpServlet {
 //			System.out.println("連線成功");
 
 			// 3. 送出SQL指令
-			pstmt = con.prepareStatement("SELECT * FROM chat_message WHERE room_id = ? ORDER BY sent_time");
-			pstmt.setInt(1, roomId); // 4. 塞參數
-			rs = pstmt.executeQuery(); // 5. 執行
+			// 新增一筆資料到資料庫
+			pstmt = con.prepareStatement(
+					"INSERT INTO match_table (user1_id, user2_id, matched_at, status) VALUES (?, ?, NOW(), 'matched')");
+			pstmt.setInt(1, user1Id); // 4. 塞參數
+			pstmt.setInt(2, user2Id);
+			int row = pstmt.executeUpdate(); // 5. 執行
 
-			List<ChatMessage> list = new ArrayList<>();
-
-			while (rs.next()) {
-				int messageId = rs.getInt("message_id");
-				roomId = rs.getInt("room_id");
-				int senderId = rs.getInt("sender_id");
-				String content = rs.getString("content");
-				String imgBase64 = rs.getString("img");
-				String sentTime = rs.getString("sent_time");
-				ChatMessage chatMessage = new ChatMessage(messageId, roomId, senderId, content, imgBase64, sentTime);
-				list.add(chatMessage);
+			if (row == 1) {
+				response.setContentType("text/plain");
+				response.setCharacterEncoding("UTF-8");
+				response.getWriter().write("配對資料收到囉！");
 			}
 
-			Gson gson = new Gson();
-			String json = gson.toJson(list); // 把 Java List 轉成 JSON 字串
-			response.setContentType("application/json");
-			response.setCharacterEncoding("UTF-8");
-			response.getWriter().write(json); // 將 JSON 字串送出（給前端 fetch() 接）
+			pstmt = con.prepareStatement("SELECT * FROM match_table WHERE user1_id = ? AND user2_id = ?");
+			pstmt.setInt(1, user2Id); // 4. 塞參數
+			pstmt.setInt(2, user1Id);
+			rs = pstmt.executeQuery(); // 5. 執行
 
-		} catch (NumberFormatException e) {
-			System.out.println("roomId 轉換失敗！");
-			e.printStackTrace();
+			if (rs.next()) {
+				System.out.println("成功配對!");
+				pstmt = con.prepareStatement("INSERT INTO chat_room (user1_id, user2_id, created_at) VALUES (?, ?, NOW())");
+				pstmt.setInt(1, user2Id);
+				pstmt.setInt(2, user1Id);
+				pstmt.executeUpdate();
+			} else {
+				System.out.println("對方尚未與你配對!");
+			}
+
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -100,12 +113,8 @@ public class ChatMessageServlet extends HttpServlet {
 					se.printStackTrace();
 				}
 			}
-		}
-	}
+		}	
 
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		doGet(request, response);
 	}
 
 }

@@ -1,27 +1,30 @@
-package shakemate.model;
+package com.shakemate.VO;
 
-public class ChatMessage {
+public class ChatMessageVO {
 	private int messageId;
 	private int roomId;
 	private int senderId;
 	private String content;
+	private byte[] imgBytes;
 	private String sentTime;
+	private boolean isRead; 
 	private String imgBase64;
 	
-	public ChatMessage() {
+	public ChatMessageVO() {
 		super();
 	}
 
-	public ChatMessage(int messageId, int roomId, int senderId, String content, String sentTime, String imgBase64) {
+	public ChatMessageVO(int messageId, int roomId, int senderId, String content, String imgBase64, String sentTime, boolean isRead) {
 		super();
 		this.messageId = messageId;
 		this.roomId = roomId;
 		this.senderId = senderId;
 		this.content = content;
-		this.sentTime = sentTime;
 		this.imgBase64 = imgBase64;
+		this.sentTime = sentTime;
+		this.isRead = isRead;
 	}
-
+	
 	public int getMessageId() {
 		return messageId;
 	}
@@ -62,6 +65,24 @@ public class ChatMessage {
 		this.sentTime = sentTime;
 	}
 
+
+	public byte[] getImgBytes() {
+		return imgBytes;
+	}
+
+	public void setImgBytes(byte[] imgBytes) {
+		this.imgBytes = imgBytes;
+	}
+
+	public boolean isRead() {
+		return isRead;
+	}
+
+
+	public void setRead(boolean isRead) {
+		this.isRead = isRead;
+	}
+
 	public String getImgBase64() {
 		return imgBase64;
 	}
@@ -69,5 +90,6 @@ public class ChatMessage {
 	public void setImgBase64(String imgBase64) {
 		this.imgBase64 = imgBase64;
 	}
-
+	
+	
 }
