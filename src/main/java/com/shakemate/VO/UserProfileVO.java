@@ -11,8 +11,15 @@ public class UserProfileVO {
     private String personality;
     private String interests;
     private String intro;
+    
+    
 
-    public UserProfileVO(int userId, String username, int age, String zodiac, List<String> avatarList,
+    public UserProfileVO() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	public UserProfileVO(int userId, String username, int age, String zodiac, List<String> avatarList,
                          String personality, String interests, String intro) {
         this.userId = userId;
         this.username = username;

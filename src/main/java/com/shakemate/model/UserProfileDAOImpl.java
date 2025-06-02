@@ -120,41 +120,112 @@ public class UserProfileDAOImpl implements UserProfileDAO {
         return null;
     }
 
+	
+    public List<UserProfileVO> prefer_matched(int currentUserId, List<String> interests, List<String> personality, Integer gender) {
+        List<UserProfileVO> result = new ArrayList<>();
+        
+        StringBuilder sql = new StringBuilder();
+        sql.append("""
+        		SELECT
+        		user_id,
+        		username,
+        		birthday,
+        		personality,
+        		interests,
+        		intro,
+        		img1,
+        		img2,
+        		img3,
+        		img4,
+        		img5,
+              (
+        """);
 
-    
-//    @Override
-//    public Map<String, Object> findById(int userId) throws SQLException {
-//        String sql = "SELECT name, birthday, job, personality, interests, intro, img_1 FROM user WHERE user_id = ?";
-//        Map<String, Object> map = new HashMap<>();
-//        
-//        try (PreparedStatement pstmt = con.prepareStatement(sql)) {
-//            pstmt.setInt(1, userId);
-//
-//            try (ResultSet rs = pstmt.executeQuery()) {
-//                if (rs.next()) {
-//    				Date bd = rs.getDate("birthday");
-//    				int age = Period.between(bd.toLocalDate(), LocalDate.now()).getYears();
-//
-//    				map.put("name", rs.getString("name"));
-//    				map.put("age", age);
-//    				map.put("job", rs.getString("job"));
-//    				map.put("personality", rs.getString("personality"));
-//    				map.put("interests", rs.getString("interests"));
-//    				map.put("intro", rs.getString("intro"));
-//    				
-//    				
-//    				// —— 安全讀 BLOB 並轉 Data URL ——  
-//    			    byte[] imgBytes = rs.getBytes("img_1");
-//    			    String imgBase64 = null;
-//    			    if (imgBytes != null && imgBytes.length > 0) {
-//    			        imgBase64 = "data:image/jpeg;base64," 
-//    			            + Base64.getEncoder().encodeToString(imgBytes);
-//    			        map.put("imgBase64", imgBase64);
-//    			    }
-//    			
-//    			}
-//                return map;
-//            }
-//        }
-//    }
+        List<String> matchExpressions = new ArrayList<>();
+        for (String interest : interests) {
+            matchExpressions.add("IF(FIND_IN_SET('" + interest + "', interests) > 0, 1, 0)");
+        }
+        for (String p : personality) {
+            matchExpressions.add("IF(FIND_IN_SET('" + p + "', personality) > 0, 1, 0)");
+        }
+
+        sql.append(String.join(" + ", matchExpressions));
+        sql.append(") AS match_count\nFROM users\n");
+
+        // ⭐️ 1. 拆興趣與人格條件為 optionalConds
+        List<String> interestConds = new ArrayList<>();
+        for (String interest : interests) {
+            interestConds.add("FIND_IN_SET('" + interest + "', interests) > 0");
+        }
+
+        List<String> personalityConds = new ArrayList<>();
+        for (String p : personality) {
+            personalityConds.add("FIND_IN_SET('" + p + "', personality) > 0");
+        }
+
+        List<String> optionalConds = new ArrayList<>();
+        optionalConds.addAll(interestConds);
+        optionalConds.addAll(personalityConds);
+
+        // ⭐️ 2. 寫入 WHERE 子句
+        sql.append("WHERE user_id != ").append(currentUserId).append("\n");
+        
+        sql.append("AND user_id NOT IN (\n");
+        sql.append("    SELECT TARGET_USER_ID FROM user_matches WHERE ACTION_USER_ID = ").append(currentUserId).append("\n");
+        sql.append(")\n");
+        
+        if (gender != null) {
+            sql.append("AND gender = ").append(gender).append("\n");
+        }
+
+
+        // ⭐️ 3. 如果興趣或人格有選，才加 AND (...)
+        if (!optionalConds.isEmpty()) {
+            sql.append("AND (\n");
+            sql.append(String.join(" OR\n", optionalConds));
+            sql.append(")\n");
+        }
+
+        // ⭐️ 4. 排序
+        sql.append("ORDER BY match_count DESC");
+
+
+        // Debug 用：印出 SQL 組出來長怎樣
+        System.out.println("🔍 組出 SQL：\n" + sql);
+
+        try (Connection con = Util.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql.toString());
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                UserProfileVO vo = new UserProfileVO();
+                vo.setUserId(rs.getInt("user_id"));
+                vo.setUsername(rs.getString("username"));
+                Date birthday = rs.getDate("birthday");
+                
+                int age = Period.between(birthday.toLocalDate(), LocalDate.now()).getYears();
+                vo.setAge(age);
+                String zodiac = getZodiac(birthday.toLocalDate());
+                vo.setZodiac(zodiac);
+
+                List<String> avatarList = new ArrayList<>();
+                for (int i = 1; i <= 5; i++) {
+                    String imgUrl = rs.getString("img" + i);
+                    if (imgUrl != null && !imgUrl.isBlank()) {
+                        avatarList.add(imgUrl);
+                    }
+                }
+                vo.setAvatarList(avatarList);
+                vo.setPersonality(rs.getString("personality"));
+                vo.setInterests(rs.getString("interests"));
+                vo.setIntro(rs.getString("intro"));
+                // 你也可以 setMatchCount(rs.getInt("match_count")) 如果 VO 有的話
+                result.add(vo);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
+    }
 }

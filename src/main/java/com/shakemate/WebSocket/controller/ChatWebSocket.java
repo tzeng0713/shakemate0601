@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.shakemate.model.ChatMessageDAOImpl;
 
 @ServerEndpoint("/chatSocket/{userId}")
 public class ChatWebSocket {
@@ -27,32 +28,9 @@ public class ChatWebSocket {
 	@OnMessage
 	public void onMessage(String message, Session senderSession, @PathParam("userId") int senderId) {
 		try {
-			System.out.println("HI");
-			// 如果是 JSON 結構（已讀通知）
-			if (message.trim().startsWith("{")) {
-				JsonObject json = JsonParser.parseString(message).getAsJsonObject();
-				if ("read".equals(json.get("type").getAsString())) {
-					int roomId = json.get("roomId").getAsInt();
-					int readerId = json.get("readerId").getAsInt(); // 其實可以直接用 senderId，但你要保留我就不動它
-					int messageSenderId = json.get("senderId").getAsInt(); // 原始訊息的 sender 才是被通知的對象
-
-					System.out.println("👁️‍🗨️ user " + readerId + " 已讀聊天室 " + roomId + " 訊息");
-
-					Session receiverSession = userSessions.get(messageSenderId);
-					if (receiverSession != null && receiverSession.isOpen()) {
-						JsonObject notify = new JsonObject();
-						notify.addProperty("type", "read");
-						notify.addProperty("roomId", roomId);
-						notify.addProperty("readerId", readerId); // 告訴對方誰已讀
-
-						receiverSession.getBasicRemote().sendText(notify.toString());
-					}
-					return; // ⚠️ 處理完 read 就 return，不要繼續跑下面發訊息流程
-				}
-			}
-
-			String[] parts = message.split("\\|", 3);
-			if (parts.length < 3) {
+			System.out.println("HI_後端websocket");
+			String[] parts = message.split("\\|", 4);
+			if (parts.length < 4) {
 				System.err.println("⚠️ 格式錯誤，無法解析：" + message);
 				return;
 			}
@@ -60,20 +38,27 @@ public class ChatWebSocket {
 			int roomId = Integer.parseInt(parts[0]);
 			int fromId = Integer.parseInt(parts[1]);
 			String content = parts[2];
-
+			int receiveId = Integer.parseInt(parts[3]);
+			
 			System.out.println("📩 收到訊息 from " + fromId + "："
 					+ (content.length() > 100 ? content.substring(0, 100) + "..." : content));
 
 			// 轉發訊息給其他用戶（可根據 roomId 過濾）
-			userSessions.forEach((userId, session) -> {
-				if (session.isOpen() && userId != fromId) {
-					try {
-						session.getBasicRemote().sendText(roomId + ":" + fromId + "|" + content);
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-			});
+			Session receiveId_session = userSessions.get(receiveId);
+			receiveId_session.getBasicRemote().sendText(roomId + ":" + fromId + "|" + content);
+			
+			if (content.equals("read")) {
+				new ChatMessageDAOImpl().markMessagesAsRead(fromId, roomId);
+			}
+//			userSessions.forEach((userId, session) -> {
+//				if (session.isOpen() && userId != fromId) {
+//					try {
+//						session.getBasicRemote().sendText(roomId + ":" + fromId + "|" + content);
+//					} catch (IOException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			});
 		} catch (Exception e) {
 			System.err.println("❌ WebSocket 訊息處理失敗：" + e.getMessage());
 		}

@@ -10,8 +10,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDate;
 import java.time.Period;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.shakemate.VO.UserProfileVO;
@@ -129,5 +131,4 @@ public class MatchDAOImpl implements MatchDAO{
         }
         return -1; // 表示建立聊天室失敗
     }
-    
 }

@@ -1,5 +1,6 @@
 const urlParams = new URLSearchParams(window.location.search);
 const currentUserId = parseInt(urlParams.get("currentUserId")) || null;
+const roomId = urlParams.get("roomId") || null;
 
 if (!currentUserId) {
 	alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
@@ -7,6 +8,128 @@ if (!currentUserId) {
 
 
 let currentTargetId = null;
+// 條件篩選按鈕
+const filterBtn = document.querySelector('.filterBtn');
+// 條件篩選彈出視窗
+const filterModal = document.getElementById('filterModal');
+// 套用篩選按鈕
+const applyFilterBtn = document.querySelector('.btn-primary');
+
+let matchList = [];
+let currentIndex = 0;
+
+// ✅ 頁面一開始，檢查是否有 localStorage 暫存的 matchList（來自 matchSuccess.html）
+const savedList = localStorage.getItem(`matchedList_${currentUserId}`);
+const savedFilters = localStorage.getItem(`matchFilters_${currentUserId}`);
+
+if (savedList && savedFilters) {
+	matchList = JSON.parse(savedList);
+	currentIndex = 0;
+
+	if (matchList.length > 0) {
+		renderMatchCard(matchList[currentIndex]);
+	} else {
+		// 預設隨機推薦（沒有條件篩選）
+		fetch(`MatchControllerServlet?action=getNext&currentUserId=${currentUserId}`)
+			.then(res => res.json())
+			.then(profile => {
+				renderMatchCard(profile);
+			})
+			.catch(err => {
+				console.error("初始化會員資料失敗", err);
+			});
+	}
+
+	// ❌ 不清除 localStorage，這次要留下來繼續滑！
+} else {
+	// 預設隨機推薦（沒有條件篩選）
+	fetch(`MatchControllerServlet?action=getNext&currentUserId=${currentUserId}`)
+		.then(res => res.json())
+		.then(profile => {
+			renderMatchCard(profile);
+		})
+		.catch(err => {
+			console.error("初始化會員資料失敗", err);
+		});
+}
+
+
+
+// 點擊「條件篩選」打開視窗
+filterBtn.addEventListener('click', () => {
+	filterModal.style.display = 'flex';  // 原本 CSS 應為 display: none
+});
+
+// 條件篩選視窗 按下確認套用的按鈕
+applyFilterBtn.addEventListener('click', () => {
+	// 取得性別
+	const gender = document.getElementById('genderSelect').value;
+
+	// 取得勾選的興趣 (class: interest)
+	const interests = Array.from(document.querySelectorAll('.interest:checked'))
+		.map(input => input.value);
+
+	// 取得勾選的人格特質 (class: personality)
+	const personality = Array.from(document.querySelectorAll('.personality:checked'))
+		.map(input => input.value);
+
+	console.log('✅ 篩選資料送出：', { gender, interests, personality });
+	// 送出後關掉視窗
+	filterModal.style.display = 'none';
+
+
+	// 👉 準備 payload（送出的資料）
+	const payload = {
+		action: "getFiltered",
+		currentUserId: currentUserId, // 從你的 URL 或變數取得
+		gender: gender,
+		interests: interests,
+		personality: personality
+	};
+
+	// 👉 發送 POST 請求
+	fetch("MatchControllerServlet", {
+		method: "POST",
+		headers: {
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(payload),
+	})
+		.then(res => {
+			if (!res.ok) throw new Error("伺服器回應失敗");
+			return res.json();
+		})
+		.then(data => {
+			console.log("🎯 篩選結果：", data);
+			matchList = data;
+			currentIndex = 0;
+			renderMatchCard(matchList[currentIndex]);
+
+			// ✅ 儲存篩選資料與結果
+			localStorage.setItem(`matchedList_${currentUserId}`, JSON.stringify(matchList));
+			localStorage.setItem(`matchFilters_${currentUserId}`, JSON.stringify({
+				gender,
+				interests,
+				personality
+			}));
+		})
+		.catch(err => {
+			console.error("❌ 發送失敗：", err);
+		});
+
+
+});
+
+// 點擊視窗外區域或取消按鈕會關閉篩選彈窗
+filterModal.addEventListener("click", function(event) {
+	const isInsideModal = event.target.closest(".modal-content");
+	const isCancelButton = event.target.classList.contains("btn-secondary");
+
+	if (!isInsideModal || isCancelButton) {
+		filterModal.style.display = "none";
+	}
+});
+
 
 // 渲染會員卡片畫面
 function renderMatchCard(profile) {
@@ -109,54 +232,47 @@ function renderMatchCard(profile) {
 }
 
 
-// 監聽動畫結束事件 → fade-out 結束後 fetch 資料 + render + fade-in
-document.querySelector(".match__wrap").addEventListener("animationend", (e) => {
-	console.log("🎬 動畫結束事件成功觸發");
-	const card = e.target;
-	const wrap = document.querySelector(".match__wrap");
-	
-	if (wrap.classList.contains("fade-out")) {
-		wrap.classList.remove("fade-out");
-
-		// 🧼 立刻隱藏舊卡片，避免舊卡閃一下
-		wrap.style.visibility = "hidden";
-
-		fetch(`MatchControllerServlet?action=getNext&currentUserId=${currentUserId}`)
-			.then(res => {
-				if (!res.ok) throw new Error("查無資料");
-				return res.json();
-			})
-			.then(profile => {
-				renderMatchCard(profile);      // ✅ 更新 DOM
-				wrap.style.visibility = "visible";  // ✅ 顯示新卡
-				wrap.classList.add("fade-in"); // ✅ 播放進場動畫
-			})
-			.catch(err => {
-				document.querySelector(".match__actions").style.visibility = "hidden";
-//				header.style.visibility = "hidden";
-				console.error("❌ 沒有更多會員了", err);
-				alert("你已經看完所有人啦！");
-			});
-	}
-
-	if (wrap.classList.contains("fade-in")) {
-		wrap.classList.remove("fade-in"); // 清除動畫 class
-	}
-});
-
-// 初始化頁面 → 撈第一筆資料
-fetch(`MatchControllerServlet?action=getNext&currentUserId=${currentUserId}`)
-	.then(res => res.json())
-	.then(profile => {
-		renderMatchCard(profile);
-	})
-	.catch(err => {
-		console.error("初始化會員資料失敗", err);
-	});
+//// 監聽動畫結束事件 → fade-out 結束後 fetch 資料 + render + fade-in
+//document.querySelector(".match__wrap").addEventListener("animationend", (e) => {
+//	console.log("🎬 動畫結束事件成功觸發");
+//	const card = e.target;
+//	const wrap = document.querySelector(".match__wrap");
+//
+//	if (wrap.classList.contains("fade-out")) {
+//		wrap.classList.remove("fade-out");
+//		wrap.style.visibility = "hidden";
+//
+//		if (matchList.length > 0) {
+//			renderMatchCard(matchList[currentIndex]);
+//			wrap.style.visibility = "visible";
+//			wrap.classList.add("fade-in");
+//		} else {
+//			// ❌ matchList 沒資料 → 改從後端撈
+//			fetch(`MatchControllerServlet?action=getNext&currentUserId=${currentUserId}`)
+//				.then(res => res.json())
+//				.then(profile => {
+//					if (!profile || !profile.userId) {
+//						wrap.style.visibility = "hidden";
+//						throw new Error("後端沒資料");
+//					}
+//					renderMatchCard(profile);
+//					wrap.style.visibility = "visible";
+//					wrap.classList.add("fade-in");
+//				})
+//				.catch(err => {
+//					console.error("❌ 沒有更多會員了", err);
+//					alert("你已經看完所有人啦！");
+//				});
+//		}
+//	}
+//
+//	if (wrap.classList.contains("fade-in")) {
+//		wrap.classList.remove("fade-in"); // 清除動畫 class
+//	}
+//});
 
 
 // 這段 JS 專門處理按下 like 或 dislike 按鈕後的行為
-
 const likeBtn = document.querySelector(".match__button--like");
 const dislikeBtn = document.querySelector(".match__button--dislike");
 
@@ -169,7 +285,6 @@ function setCurrentTargetId(id) {
 	currentTargetId = id;
 }
 
-// 發送配對請求
 function sendMatch(action) {
 	fetch("MatchControllerServlet", {
 		method: "POST",
@@ -180,33 +295,73 @@ function sendMatch(action) {
 	})
 		.then((res) => res.json())
 		.then((data) => {
+			const wrap = document.querySelector(".match__wrap");
+			wrap.classList.remove("fade-in", "fade-out");
+			void wrap.offsetWidth;
+			wrap.classList.add("fade-out");
+
 			if (action === "like") {
 				if (data.alreadyActed) {
 					alert("⚠️ 你已經按過這個人囉");
 				} else if (data.matched) {
-					// 成功配對！導向成功頁面（可以帶 roomId 當參數）
+					// ✅ 如果是配對成功 → 把目前這筆從 matchList 移除
+					matchList.splice(currentIndex, 1);
+					localStorage.setItem(`matchedList_${currentUserId}`, JSON.stringify(matchList));
+					// 對方也按過你：跳轉成功配對頁面
 					window.location.href = `matchSuccess.html?roomId=${data.roomId}&currentUserId=${currentUserId}`;
-				} else {
-					// 對方還沒按你 → 繼續下一位（可手動觸發動畫或 reload 卡片）
-//					document.querySelector(".match__wrap").classList.add("fade-out");
-					// 👉 播動畫
-					const wrap = document.querySelector(".match__wrap");
-					wrap.classList.remove("fade-in", "fade-out");
-					void wrap.offsetWidth;
-					wrap.classList.add("fade-out");
+					return; // 不切換下一位，直接跳頁
 				}
-			} else if (action === "dislike") {
-				// 不喜歡也一樣換下一位
-//				document.querySelector(".match__wrap").classList.add("fade-out");
-				// 👉 播動畫
-				const wrap = document.querySelector(".match__wrap");
-				wrap.classList.remove("fade-in", "fade-out");
+			}
+
+			// 👉 like 或 dislike：都要換下一張（除非成功配對已跳頁）
+			// ✅ 移除當前這位使用者
+			matchList.splice(currentIndex, 1);
+			localStorage.setItem(`matchedList_${currentUserId}`, JSON.stringify(matchList));
+
+			if (matchList.length > 0) {
+				// ✅ 有剩下的卡片：從 matchList 顯示下一張
+				renderMatchCard(matchList[currentIndex]);
+				wrap.classList.remove("fade-out");
 				void wrap.offsetWidth;
-				wrap.classList.add("fade-out");
+				wrap.classList.add("fade-in");
+			} else {
+				// 從後端抓下一位（若是隨機推薦的情況）
+				fetch(`MatchControllerServlet?action=getNext&currentUserId=${currentUserId}`)
+					.then(res => res.json())
+					.then(profile => {
+						if (!profile || !profile.userId) {
+							// 🧼 補充：避免殘影，清空畫面
+							document.querySelector(".match__wrap").style.visibility = "hidden";
+							throw new Error("後端沒資料");
+						}
+						// 正常情況
+						renderMatchCard(profile);
+						wrap.classList.remove("fade-out");
+						void wrap.offsetWidth;
+						wrap.classList.add("fade-in");
+					})
+					.catch(err => {
+						console.error("❌ 沒有更多會員了", err);
+						alert("你已經看完所有人啦！");
+					});
 			}
 		})
-		.catch((err) => {
-			console.error("❌ 傳送配對失敗", err);
-			alert("伺服器錯誤，請稍後再試！");
-		});
+}
+
+function goToChat() {
+	if (!roomId || !currentUserId) {
+		alert("❌ 缺少參數，無法導向聊天室！");
+		return;
+	}
+	window.location.href = `chatroom.html?currentUserId=${currentUserId}&currentRoomId=${roomId}`;
+}
+// 處理配對成功提示頁面中，點擊「再抖一下」按鈕的行為
+function goToMatch() {
+	if (!currentUserId) {
+		alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
+		return;
+	}
+
+	// ✅ 不清除 localStorage，直接跳轉回配對頁
+	window.location.href = `match2.html?currentUserId=${currentUserId}&fromSuccess=1`;
 }

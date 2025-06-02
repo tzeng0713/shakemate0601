@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>配對成功！</title>
 <style>
-
 html {
 	height: 100%;
 	font-size: 62.5%;
@@ -16,7 +15,7 @@ html {
 body {
 	font-family: sans-serif;
 	text-align: center;
-	padding: 2rem;	
+	padding: 2rem;
 }
 
 .success-message {
@@ -63,13 +62,14 @@ body {
 .btn-continue:hover {
 	background-color: #888;
 }
-
 </style>
 </head>
 <body>
 
 	<h1 class="success-message">🎉 配對成功！</h1>
 
+	<!-- 	<button id="btnChat" class="btn btn-chat">開始聊天</button> -->
+	<!-- 	<button id="btnContinue" class="btn btn-continue">再抖一下</button> -->
 	<button class="btn btn-chat" onclick="goToChat()">開始聊天</button>
 	<button class="btn btn-continue" onclick="goToMatch()">再抖一下</button>
 
@@ -79,22 +79,22 @@ body {
 		const roomId = urlParams.get("roomId");
 		const currentUserId = parseInt(urlParams.get("currentUserId")) || null;
 
-		function goToChat() {
-			  if (!roomId || !currentUserId) {
-			    alert("❌ 缺少參數，無法導向聊天室！");
-			    return;
-			  }
-			  window.location.href = `chatroom.html?currentUserId=${currentUserId}&currentRoomId=${roomId}`;
+<!--		function goToChat() {
+			if (!roomId || !currentUserId) {
+				alert("❌ 缺少參數，無法導向聊天室！");
+				return;
 			}
+			window.location.href = `chatroom.html?currentUserId=${currentUserId}&currentRoomId=${roomId}`;
+		}
 
-			function goToMatch() {
-			  if (!currentUserId) {
-			    alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
-			    return;
-			  }
-			  window.location.href = `match.html?currentUserId=${currentUserId}`;
+		function goToMatch() {
+			if (!currentUserId) {
+				alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
+				return;
 			}
+			window.location.href = `match.html?currentUserId=${currentUserId}`;
+		} -->
 	</script>
-
+	<script src="js/matchSystem.js"></script>
 </body>
 </html>

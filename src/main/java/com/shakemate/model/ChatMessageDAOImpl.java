@@ -1,12 +1,15 @@
 package com.shakemate.model;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.Period;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
 
 import com.shakemate.VO.ChatMessageVO;
+import com.shakemate.VO.UserProfileVO;
 import com.shakemate.util.Util;
 
 public class ChatMessageDAOImpl implements ChatMessageDAO {
@@ -76,17 +79,42 @@ public class ChatMessageDAOImpl implements ChatMessageDAO {
             e.printStackTrace();
         } 
     }
-    
+        
     @Override
-    public void markMessagesAsRead(int userId, int roomId) throws SQLException {
+    public void markMessagesAsRead(int userId, int roomId) {
         String sql = "UPDATE CHAT_MESSAGE SET IS_READ = 1 WHERE ROOM_ID = ? AND SENDER_ID != ? AND IS_READ = 0";
-        try (Connection con = Util.getConnection();
-           	 PreparedStatement pstmt = con.prepareStatement(sql)) {
-            pstmt.setInt(1, roomId);
-            pstmt.setInt(2, userId);
-            pstmt.executeUpdate();
+        
+        int maxRetry = 3;       // 最多 retry 3 次
+        int retryDelay = 150;   // 每次延遲 150ms
+
+        for (int i = 0; i < maxRetry; i++) {
+            try (Connection con = Util.getConnection();
+                 PreparedStatement pstmt = con.prepareStatement(sql)) {
+
+                pstmt.setInt(1, roomId);
+                pstmt.setInt(2, userId);
+                int updatedRows = pstmt.executeUpdate();
+
+                if (updatedRows > 0) {
+                    System.out.println("✅ 成功將 " + updatedRows + " 筆訊息標記為已讀");
+                    break; // 已成功，跳出 retry
+                } else {
+                    System.out.println("⚠️ 第 " + (i + 1) + " 次嘗試未標記任何訊息為已讀");
+                    if (i < maxRetry - 1) {
+                        Thread.sleep(retryDelay);
+                    }
+                }
+
+            } catch (SQLException e) {
+                System.err.println("❌ 資料庫錯誤：" + e.getMessage());
+                break; // 如果 SQL 錯誤，就不 retry 了
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                break;
+            }
         }
     }
+
 
     
 }

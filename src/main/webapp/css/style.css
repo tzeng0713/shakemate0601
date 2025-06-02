@@ -117,7 +117,6 @@ html {
 .chatroom__bar-userInfo span {
 	font-size: 1.6rem;
 	font-weight: bold;
-
 }
 
 .chatroom__options {
@@ -407,8 +406,8 @@ html {
 .profile-popup .close-btn {
 	position: absolute;
 	top: -3rem;
-    right: -2.2rem;
-    font-size: 2.2rem;
+	right: -2.2rem;
+	font-size: 2.2rem;
 	color: #3b3b3b;
 	cursor: pointer;
 }
@@ -499,7 +498,6 @@ html {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
-	padding: 2rem 2rem;
 	/* ✅ 主要新增：卡片包裹成 swiper */
 }
 
@@ -649,17 +647,21 @@ html {
 	border-radius: 1rem;
 }
 
-/* 淡出淡入動畫 */
+
+
+/* ✅ 淡出動畫 */
 .fade-out {
 	animation: fadeOut 0.2s ease forwards;
 	will-change: opacity, transform;
 }
 
+/* ✅ 淡入動畫 */
 .fade-in {
 	animation: fadeIn 0.2s ease forwards;
 	will-change: opacity, transform;
 }
 
+/* ✅ 定義 fadeOut 動畫 */
 @keyframes fadeOut {
 	from {
 		opacity: 1;
@@ -671,6 +673,7 @@ html {
 	}
 }
 
+/* ✅ 定義 fadeIn 動畫 */
 @keyframes fadeIn {
 	from {
 		opacity: 0;
@@ -730,4 +733,142 @@ to {
 	max-width: 80%;
 	max-height: 80%;
 	border-radius: 8px;
+}
+
+/* 篩選按鈕區塊 */
+.filter-btn-wrapper {
+	text-align: center;
+	display: flex;
+    justify-content: flex-end;
+	width: 62rem;
+	margin: 1rem auto;
+}
+
+.filterBtn{
+	background-color: #0097a7;
+    color: #fff;
+	border: none;
+	padding: 0.6rem 1.2rem;
+	border-radius: 1.2rem;
+	font-size: 1.6rem;
+	cursor: pointer;
+	margin: 0 0.5rem;
+}
+
+#filterModal {
+	display: none;	
+}
+
+/* 彈窗背景遮罩 */
+.modal-overlay {
+	display: none; /* 預設隱藏 */
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: rgba(0, 0, 0, 0.5);
+	z-index: 999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+/* 彈窗內容 */
+.modal-content {
+	background-color: #ffffff;
+	padding: 2rem;
+	border-radius: 1.5rem;
+	max-width: 600px;
+	width: 90%;
+	max-height: 80%;
+	overflow-y: auto;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
+
+/* 標題 */
+.modal-title {
+	text-align: center;
+	color: #008C9E;
+	font-size: 1.8rem;
+	margin-bottom: 1rem;
+}
+
+.filter-title {
+	font-size: 1.6rem;
+}
+
+/* 下拉式選單 */
+.select-full {
+	display: block;
+	width: 95%;
+	padding: 0.5rem;
+	font-size: 1.4rem;
+	border-radius: 0.5rem;
+	border: 1px solid #ccc;
+	margin-top: 1rem;
+	margin-bottom: 1rem;
+}
+
+/* 每一組區塊 */
+.filter-section {
+	margin-top: 1.5rem;
+}
+
+.checkbox-group {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.8rem 1.2rem; /* 上下間距 0.8rem、左右間距 1.2rem */
+	margin-top: 0.5rem;
+}
+
+/* Checkbox 群組（直排） */
+.checkbox-group label {
+	flex: 1 1 calc(25% - 1.2rem); /* 最多一排四個，並保留間距 */
+	min-width: 120px;
+	font-size: 1.4rem;
+	display: inline-flex; /* ✅ 用 inline-flex 才能讓文字與 checkbox 對齊 */
+}
+
+.checkbox-group input {
+	margin-right: 0.5rem;
+	margin-top: 0.1rem;
+	width: 1.5rem;
+}
+
+/* 按鈕群組 */
+.modal-actions {
+	text-align: center;
+	margin-top: 3.5rem;
+	margin-bottom: 1rem;
+}
+
+.filter-btn {
+	color: white;
+	border: none;
+	padding: 0.6rem 1.2rem;
+	border-radius: 1.2rem;
+	font-size: 1.6rem;
+	cursor: pointer;
+	margin: 0 0.5rem;
+}
+
+/* 藍色主按鈕 */
+.btn-primary {
+	background-color: #008C9E;
+}
+
+/* 灰色次按鈕 */
+.btn-secondary {
+	background-color: #cccccc;
+}
+
+/* 滾動條美化（可選） */
+.modal-content::-webkit-scrollbar {
+	width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+	background-color: #aaa;
+	border-radius: 3px;
 }

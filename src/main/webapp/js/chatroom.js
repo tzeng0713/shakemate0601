@@ -6,6 +6,7 @@ if (!currentUserId) {
 }
 
 let currentRoomId = null;
+let receiveId = null;
 let selectedImageFile = null;
 
 // 側邊選單
@@ -66,6 +67,7 @@ function loadChatRooms() {
 }
 // 點擊聊天室後的處理
 function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
+	receiveId = peerId;
 	console.log("點到聊天室了，roomId:", roomId);
 	// 告訴後端我點進聊天室了 → 把這間聊天室未讀訊息改成已讀
 	fetch("ChatRoomControllerServlet", {
@@ -111,6 +113,9 @@ function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
 			console.error("取得訊息時出錯:", err);
 		});
 
+	if (socket && socket.readyState === WebSocket.OPEN) {
+		socket.send(`${currentRoomId}|${currentUserId}|read|${receiveId}`);
+	}
 }
 // 切換聊天室選擇狀態，並將對應聊天室項目標記為 active（用於 UI 顯示目前選中的聊天室）
 function switchChat(roomId) {
@@ -157,7 +162,7 @@ function sendMessage() {
 
 	// 即時傳送文字訊息給對方
 	if (socket && socket.readyState === WebSocket.OPEN) {
-		socket.send(`${currentRoomId}|${currentUserId}|${content}`);
+		socket.send(`${currentRoomId}|${currentUserId}|${content}|${receiveId}`);
 	}
 	// 主動更新自己聊天室列表（preview + 時間）
 	const li = document.querySelector(`.chat-list li[data-roomid="${currentRoomId}"]`);
@@ -297,7 +302,26 @@ function connectWebSocket(userId) {
 		const [roomId, senderId] = roomInfo.split(":").map(Number);
 		
 		const li = document.querySelector(`.chat-list li[data-roomid="${roomId}"]`);
-		
+
+		if (contentRaw === "read"){
+			console.log("A收到B已讀訊息");
+			document.querySelectorAll('.message.right').forEach(msg => {
+			  const meta = msg.querySelector('.meta-info');
+
+			  // 如果 meta 裡還沒有 read-label，就加上去
+			  if (meta && !meta.querySelector('.read-label')) {
+			    const readDiv = document.createElement('div');
+			    readDiv.className = 'read-label';
+			    readDiv.textContent = '已讀';
+
+			    // 加在 time-label 前面
+			    const timeLabel = meta.querySelector('.time-label');
+			    meta.insertBefore(readDiv, timeLabel);
+			  }
+			});
+
+			return;
+		}
 		if (li) {
 			// 更新 preview 文本
 			const preview = li.querySelector("p");
@@ -322,14 +346,20 @@ function connectWebSocket(userId) {
 			li.classList.add("fade-in"); // 重新加上動畫 class，達到「聊天室列表往上跳」的效果			
 		}
 		// ✅ 如果剛好正在看這個聊天室，就顯示訊息氣泡
+		console.log(senderId);
 		if (parseInt(roomId) === currentRoomId) {
-			console.log("hi");
+			console.log("hiddsss");
 			if (contentRaw.startsWith("image:")) {
 				const encoded = contentRaw.substring(6);
 				const imageBase64 = decodeURIComponent(encoded);
 				renderIncomingMessage(senderId, "", imageBase64);
 			} else {
 				renderIncomingMessage(senderId, contentRaw);
+			}
+			
+			if (socket && socket.readyState === WebSocket.OPEN) {
+//				socket.send(`${currentRoomId}|${currentUserId}|$"read"`);
+				socket.send(`${currentRoomId}|${currentUserId}|read|${receiveId}`);
 			}
 		}
 	};
@@ -396,7 +426,7 @@ document.getElementById("imageInput").addEventListener("change", function(event)
 		// ✅ 傳 WebSocket
 		if (socket && socket.readyState === WebSocket.OPEN) {
 			const encodedImage = encodeURIComponent(imageBase64);
-			socket.send(`${currentRoomId}|${currentUserId}|image:${encodedImage}`);
+			socket.send(`${currentRoomId}|${currentUserId}|image:${encodedImage}|${receiveId}`);
 		}
 	};
 	reader.readAsDataURL(file);
@@ -518,7 +548,7 @@ function createMessageElement({ isMe, content = "", imageBase64 = null, timeStr,
 	  read.textContent = "已讀";
 	  meta.appendChild(read);
 	}
-
+	
 	meta.appendChild(time);
 
 	bubbleBlock.appendChild(meta);
