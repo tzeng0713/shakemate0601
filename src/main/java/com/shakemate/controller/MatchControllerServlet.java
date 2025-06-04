@@ -25,12 +25,17 @@ public class MatchControllerServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
         String action = req.getParameter("action");
+		HttpSession session = req.getSession();
+        Integer userId = Integer.valueOf(session.getAttribute("account").toString());
+
         
 //        req.getParameterMap().forEach((key, value) ->
 //        System.out.println("📦 key: [" + key + "] → " + Arrays.toString(value))
 //    );
 
-        int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
+//        int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
+		Integer currentUserId = Integer.valueOf(session.getAttribute("account").toString());
+        
 //        int test = Integer.parseInt(req.getParameter("test"));
 //        if (test == 2) {
 //        	ArrayList<String> interests = new ArrayList<String>();

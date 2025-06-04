@@ -1,12 +1,12 @@
 const urlParams = new URLSearchParams(window.location.search);
-const currentUserId = parseInt(urlParams.get("currentUserId")) || null;
+//const currentUserId = parseInt(urlParams.get("currentUserId")) || null;
 const roomId = urlParams.get("roomId") || null;
 
-if (!currentUserId) {
-	alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
-}
+//IF (!CURRENTUSERID) {
+//	ALERT("⚠️ 無法取得 CURRENTUSERID，請確認網址格式是否正確！");
+//}
 
-
+let currentUserId = null;
 let currentTargetId = null;
 // 條件篩選按鈕
 const filterBtn = document.querySelector('.filterBtn');
@@ -363,5 +363,5 @@ function goToMatch() {
 	}
 
 	// ✅ 不清除 localStorage，直接跳轉回配對頁
-	window.location.href = `match2.html?currentUserId=${currentUserId}&fromSuccess=1`;
+	window.location.href = `match.html?currentUserId=${currentUserId}&fromSuccess=1`;
 }
