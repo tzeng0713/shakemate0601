@@ -53,7 +53,7 @@ function loadChatRooms() {
 					  </div>
 					  <div class="chat-time">${timeStr}</div>
 					  <span class="unread-dot"></span>
-					`;				
+					`;
 				const dot = li.querySelector(".unread-dot");
 				if (room.hasUnread && dot) {
 					dot.classList.add("show");
@@ -71,20 +71,20 @@ function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
 	console.log("點到聊天室了，roomId:", roomId);
 	// 告訴後端我點進聊天室了 → 把這間聊天室未讀訊息改成已讀
 	fetch("ChatRoomControllerServlet", {
-	  method: "POST",
-	  headers: {
-	    "Content-Type": "application/x-www-form-urlencoded"
-	  },
-	  body: `action=markAsRead&currentUserId=${currentUserId}&roomId=${roomId}`
+		method: "POST",
+		headers: {
+			"Content-Type": "application/x-www-form-urlencoded"
+		},
+		body: `action=markAsRead&currentUserId=${currentUserId}&roomId=${roomId}`
 	})
-	.then(res => res.text())
-	.then(data => {
-	  if (data === "success") {
-	    console.log("已讀狀態已更新！");
-	  } else {
-		console.log("已讀狀態未更新！");
-	  }
-	});
+		.then(res => res.text())
+		.then(data => {
+			if (data === "success") {
+				console.log("已讀狀態已更新！");
+			} else {
+				console.log("已讀狀態未更新！");
+			}
+		});
 	switchChat(roomId);
 
 	fetch(`ChatRoomControllerServlet?action=getMessages&roomId=${roomId}`)
@@ -94,7 +94,7 @@ function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
 			// ✅ 更新聊天室 bar 上的名字與頭貼
 			document.querySelector(".chatroom__bar-avatar").src = peerAvatar || "img/default.jpg";
 			document.querySelector(".chatroom__bar-name").textContent = peerName || "未知用戶";
-			
+
 			renderHistoryMessages(data, peerName, peerAvatar, peerId);
 			document.querySelector(".chat-input").style.display = "flex";
 			document.querySelector(".chatroom__bar").style.display = "block";
@@ -120,7 +120,7 @@ function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
 // 切換聊天室選擇狀態，並將對應聊天室項目標記為 active（用於 UI 顯示目前選中的聊天室）
 function switchChat(roomId) {
 	currentRoomId = roomId;
-		
+
 	document.querySelectorAll('.chat-list li').forEach(li => {
 		li.classList.remove('active');
 		if (li.dataset.roomid == roomId) {
@@ -167,10 +167,10 @@ function sendMessage() {
 	// 主動更新自己聊天室列表（preview + 時間）
 	const li = document.querySelector(`.chat-list li[data-roomid="${currentRoomId}"]`);
 	if (li) {
-	    li.querySelector(".chat-preview").textContent = content;
+		li.querySelector(".chat-preview").textContent = content;
 		li.querySelector(".chat-time").textContent = getTimeString(); // 使用你自己寫好的時間函式
 		document.querySelector(".chat-list").prepend(li);
-  
+
 		li.classList.remove("fade-in");
 		void li.offsetWidth;
 		li.classList.add("fade-in");
@@ -236,10 +236,10 @@ function renderHistoryMessages(data, peerName, peerAvatar, peerId) {
 		});
 		container.appendChild(el);
 	});
-//	// ✅ 等待 DOM 真正完成之後再滾動
-//	requestAnimationFrame(() => {
-//		container.scrollTop = container.scrollHeight;
-//	});
+	//	// ✅ 等待 DOM 真正完成之後再滾動
+	//	requestAnimationFrame(() => {
+	//		container.scrollTop = container.scrollHeight;
+	//	});
 	container.scrollTop = container.scrollHeight; // ✅ 滾到最底部
 }
 
@@ -258,15 +258,20 @@ function openProfile(userId, name, avatarSrc) {
 	// 3. 向後端抓更多使用者資訊
 	fetch(`ChatRoomControllerServlet?action=getUserProfile&currentUserId=${userId}`)
 		.then(res => res.json())
-		.then(profile => {			
+		.then(profile => {
 			// ✅ 如果已經是 base64 或完整路徑，直接用
-			popupAvatar.src = profile.avatarList[0];					
+			// ✅ 名稱、年齡星座
+//			popupAvatar.src = profile.avatarList[0];
 			popupName.textContent = `${profile.username || '--'} `;
-			popupAge.textContent = `年齡：${profile.age || '--'} 歲`;
-			popupPersonality.textContent = `人格特質：${profile.personality || '--'}`;
-			popupInterests.textContent = `興趣專長：${profile.interests || '--'}`;
-			popupIntro.textContent = `自我介紹：${profile.intro || '--'}`;
+			popupAge.textContent = `${profile.age}歲・${profile.zodiac}`;
+			popupPersonality.textContent = `${profile.personality || '--'}`;
+			popupInterests.textContent = `${profile.interests || '--'}`;
+			popupIntro.textContent = `${profile.intro || '--'}`;
+			
+			console.log("🎯 avatarList 是：", profile.avatarList);
 
+			// 頭貼輪播渲染
+			renderPopupAvatarSwiper(profile);
 			// 4. 顯示彈窗
 			popup.style.display = "flex";
 		})
@@ -275,12 +280,12 @@ function openProfile(userId, name, avatarSrc) {
 			// 即使失敗，也顯示彈窗，保留名字與先前頭像
 			popup.style.display = "flex";
 		});
-		document.getElementById("profilePopup").addEventListener("click", function (event) {
-			// 點到卡片本體 → 不關
-			if (event.target.closest(".profile-card")) return;
-			// 其它區域都關掉
-			closeProfilePopup();
-		});
+	document.getElementById("profilePopup").addEventListener("click", function(event) {
+		// 點到卡片本體 → 不關
+		if (event.target.closest(".profile-card")) return;
+		// 其它區域都關掉
+		closeProfilePopup();
+	});
 }
 // 關閉會員介紹視窗
 function closeProfilePopup() {
@@ -300,24 +305,24 @@ function connectWebSocket(userId) {
 		const msg = event.data;
 		const [roomInfo, contentRaw] = msg.split("|");
 		const [roomId, senderId] = roomInfo.split(":").map(Number);
-		
+
 		const li = document.querySelector(`.chat-list li[data-roomid="${roomId}"]`);
 
-		if (contentRaw === "read"){
+		if (contentRaw === "read") {
 			console.log("A收到B已讀訊息");
 			document.querySelectorAll('.message.right').forEach(msg => {
-			  const meta = msg.querySelector('.meta-info');
+				const meta = msg.querySelector('.meta-info');
 
-			  // 如果 meta 裡還沒有 read-label，就加上去
-			  if (meta && !meta.querySelector('.read-label')) {
-			    const readDiv = document.createElement('div');
-			    readDiv.className = 'read-label';
-			    readDiv.textContent = '已讀';
+				// 如果 meta 裡還沒有 read-label，就加上去
+				if (meta && !meta.querySelector('.read-label')) {
+					const readDiv = document.createElement('div');
+					readDiv.className = 'read-label';
+					readDiv.textContent = '已讀';
 
-			    // 加在 time-label 前面
-			    const timeLabel = meta.querySelector('.time-label');
-			    meta.insertBefore(readDiv, timeLabel);
-			  }
+					// 加在 time-label 前面
+					const timeLabel = meta.querySelector('.time-label');
+					meta.insertBefore(readDiv, timeLabel);
+				}
 			});
 
 			return;
@@ -356,9 +361,9 @@ function connectWebSocket(userId) {
 			} else {
 				renderIncomingMessage(senderId, contentRaw);
 			}
-			
+
 			if (socket && socket.readyState === WebSocket.OPEN) {
-//				socket.send(`${currentRoomId}|${currentUserId}|$"read"`);
+				//				socket.send(`${currentRoomId}|${currentUserId}|$"read"`);
 				socket.send(`${currentRoomId}|${currentUserId}|read|${receiveId}`);
 			}
 		}
@@ -393,7 +398,7 @@ document.getElementById("uploadImageBtn").addEventListener("click", function() {
 // 當選擇圖片後
 document.getElementById("imageInput").addEventListener("change", function(event) {
 	const file = event.target.files[0];
-	if (!file) return;	
+	if (!file) return;
 	// 1. 顯示圖片（reader） ✅
 	const reader = new FileReader();
 	reader.onload = function(e) {
@@ -430,11 +435,11 @@ document.getElementById("imageInput").addEventListener("change", function(event)
 		}
 	};
 	reader.readAsDataURL(file);
-	
+
 	// 主動更新自己聊天室列表（preview + 時間）
 	const li = document.querySelector(`.chat-list li[data-roomid="${currentRoomId}"]`);
 	if (li) {
-	    li.querySelector(".chat-preview").textContent = "[圖圖]";
+		li.querySelector(".chat-preview").textContent = "[圖圖]";
 		li.querySelector(".chat-time").textContent = getTimeString(); // 使用你自己寫好的時間函式
 		document.querySelector(".chat-list").prepend(li);
 
@@ -520,17 +525,17 @@ function createMessageElement({ isMe, content = "", imageBase64 = null, timeStr,
 		img.style.borderRadius = "8px";
 		img.classList.add("chat-img");
 		// ✅ 點圖片放大
-		document.querySelector("#chatContent").addEventListener("click", function (e) {
-		  if (e.target.classList.contains("chat-img")) {
-		    // 使用者點到圖片了，做放大處理
-		    showImageModal(e.target.src);
-		  }
+		document.querySelector("#chatContent").addEventListener("click", function(e) {
+			if (e.target.classList.contains("chat-img")) {
+				// 使用者點到圖片了，做放大處理
+				showImageModal(e.target.src);
+			}
 		});
 		bubbleBlock.appendChild(img);
 	} else {
 		const bubble = document.createElement("div");
 		bubble.className = "bubble";
-		bubble.textContent = content;
+		bubble.innerHTML = content.replaceAll(" ", "&nbsp;");
 		bubbleBlock.appendChild(bubble);
 	}
 
@@ -538,17 +543,17 @@ function createMessageElement({ isMe, content = "", imageBase64 = null, timeStr,
 	const time = document.createElement("div");
 	time.className = "time-label";
 	time.textContent = timeStr;
-	
+
 	const meta = document.createElement("div");
 	meta.className = "meta-info";
 
 	if (isMe && isRead) {
-	  const read = document.createElement("span");
-	  read.className = "read-label";
-	  read.textContent = "已讀";
-	  meta.appendChild(read);
+		const read = document.createElement("span");
+		read.className = "read-label";
+		read.textContent = "已讀";
+		meta.appendChild(read);
 	}
-	
+
 	meta.appendChild(time);
 
 	bubbleBlock.appendChild(meta);
@@ -576,35 +581,72 @@ function createMessageElement({ isMe, content = "", imageBase64 = null, timeStr,
 		el.appendChild(avatar);
 		el.appendChild(bubbleBlock);
 	}
-	
-	
-	document.querySelector(".chatroom__bar-userInfo").onclick = ()=>
+
+
+	document.querySelector(".chatroom__bar-userInfo").onclick = () =>
 		openProfile(peerId, peerName, avatarUrl);
 	return el;
 }
 
 function showImageModal(src) {
-  // 顯示前先移除舊的
-  document.querySelectorAll(".img-modal").forEach(modal => modal.remove());
+	// 顯示前先移除舊的
+	document.querySelectorAll(".img-modal").forEach(modal => modal.remove());
 
-  const modal = document.createElement("div");
-  modal.className = "img-modal";
-  modal.innerHTML = `<img src="${src}" class="modal-img">`;
-  modal.addEventListener("click", () => modal.remove());
-  document.body.appendChild(modal);
+	const modal = document.createElement("div");
+	modal.className = "img-modal";
+	modal.innerHTML = `<img src="${src}" class="modal-img">`;
+	modal.addEventListener("click", () => modal.remove());
+	document.body.appendChild(modal);
 }
 
 // 點擊聊天室頂部選單的點點點按鈕
-document.addEventListener("click", function (e) {
-  const toggle = document.querySelector(".chatroom__options i");
-  const menu = document.querySelector(".chatroom__bar-menu");
+document.addEventListener("click", function(e) {
+	const toggle = document.querySelector(".chatroom__options i");
+	const menu = document.querySelector(".chatroom__bar-menu");
 
-  if (toggle.contains(e.target)) {
-    // 點擊點點點：開關選單
-    menu.style.display = (menu.style.display === "block") ? "none" : "block";
-  } else if (!menu.contains(e.target)) {
-    // 點到其他地方：關閉選單
-    menu.style.display = "none";
-  }
+	if (toggle.contains(e.target)) {
+		// 點擊點點點：開關選單
+		menu.style.display = (menu.style.display === "block") ? "none" : "block";
+	} else if (!menu.contains(e.target)) {
+		// 點到其他地方：關閉選單
+		menu.style.display = "none";
+	}
 });
 
+// 渲染會員簡介彈窗卡牌的照片輪播
+function renderPopupAvatarSwiper(profile) {
+	console.log("🎯 avatarList 是：", profile.avatarList);
+	const swiperWrapper = document.getElementById("popupAvatarWrapper");
+	const swiperContainer = document.querySelector(".popup-avatar-swiper");
+
+	// ✅ 銷毀舊 Swiper（如有）
+	const oldSwiper = swiperContainer?.swiper;
+	if (oldSwiper) {
+		oldSwiper.destroy(true, true);
+	}
+
+	// ✅ 清空 wrapper 裡的舊圖片
+	swiperWrapper.innerHTML = "";
+
+	// ✅ 建立輪播圖片
+	profile.avatarList.forEach(url => {
+		const avatarSlide = document.createElement("div");
+		avatarSlide.className = "swiper-slide";
+
+		const img = document.createElement("img");
+		img.className = "match__avatar"; // 保留原本樣式 class
+		img.src = url;
+
+		avatarSlide.appendChild(img);
+		swiperWrapper.appendChild(avatarSlide);
+	});
+
+	// ✅ 初始化 Swiper（同配對頁設定）
+	new Swiper(".popup-avatar-swiper", {
+		pagination: {
+			el: ".popup-avatar-swiper .swiper-pagination",
+			clickable: true,
+		},
+		loop: true,
+	});
+}

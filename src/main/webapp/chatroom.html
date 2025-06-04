@@ -8,6 +8,11 @@
 	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 	rel="stylesheet">
 <title>聊天室</title>
+<!-- Swiper 的 CSS -->
+<link rel="stylesheet"
+	href="https://unpkg.com/swiper/swiper-bundle.min.css" />
+<!-- Swiper 的 JS -->
+<script src="https://unpkg.com/swiper/swiper-bundle.min.js"></script>
 <link rel="stylesheet" href="css/style.css">
 </head>
 
@@ -76,7 +81,7 @@
 		</div>
 
 		<!-- ✅ 原本聊天室區塊，移到右側 -->
-		<div class="chatroom">			
+		<div class="chatroom">
 			<div class="chatroom__bar">
 				<div class="chatroom__bar-content">
 					<div class="chatroom__bar-userInfo">
@@ -138,16 +143,47 @@
 	<div class="profile-popup" id="profilePopup">
 		<div class="profile-card">
 			<span class="close-btn">&times;</span>
-			<div class="profile-avatar">
-				<img id="popupAvatar" src="" alt="頭像">
+			<div class="profile__header">
+				<h2 id="popupName" class="profile__name"></h2>
+				<p id="popupAge" class="profile__info"></p>
 			</div>
-			<h3 id="popupName">名字</h3>
-			<p id="popupAge">年齡：-- 歲</p>
-			<p id="popupPersonality">人格特質：--</p>
-			<p id="popupInterests">興趣專長：--</p>
-			<p id="popupIntro">自我介紹：--</p>
+			<div class="profile-avatar">
+				<div class="swiper popup-avatar-swiper">
+					<div class="swiper-wrapper" id="popupAvatarWrapper"></div>
+					<div class="swiper-pagination"></div>
+				</div>
+			</div>
+
+			<div class="profile-row">
+				<h5 class="label">人格特質</h5>
+				<p class="value" id="popupPersonality">--</p>
+			</div>
+
+			<div class="profile-row">
+				<h5 class="label">興趣專長</h5>
+				<p class="value" id="popupInterests">--</p>
+			</div>
+
+			<div class="profile-row">
+				<h5 class="label">自我介紹</h5>
+				<p class="value" id="popupIntro">--</p>
+			</div>
 		</div>
 	</div>
+
+	<!-- 	<div class="profile-popup" id="profilePopup"> -->
+	<!-- 		<div class="profile-card"> -->
+	<!-- 			<span class="close-btn">&times;</span> -->
+	<!-- 			<div class="profile-avatar"> -->
+	<!-- 				<img id="popupAvatar" src="" alt="頭像"> -->
+	<!-- 			</div> -->
+	<!-- 			<h3 id="popupName">名字</h3> -->
+	<!-- 			<p id="popupAge">年齡：-- 歲</p> -->
+	<!-- 			<p id="popupPersonality">人格特質：--</p> -->
+	<!-- 			<p id="popupInterests">興趣專長：--</p> -->
+	<!-- 			<p id="popupIntro">自我介紹：--</p> -->
+	<!-- 		</div> -->
+	<!-- 	</div> -->
 	<script src="js/chatroom.js"></script>
 </body>
 

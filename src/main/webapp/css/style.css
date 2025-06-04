@@ -401,6 +401,7 @@ html {
 	text-align: center;
 	box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
 	position: relative;
+	font-family: 'Noto Sans TC', sans-serif;
 }
 
 .profile-popup .close-btn {
@@ -412,13 +413,66 @@ html {
 	cursor: pointer;
 }
 
-.profile-popup .profile-avatar img {
-	width: 8rem;
-	height: 8rem;
-	border-radius: 50%;
-	-o-object-fit: cover;
+.profile__header {
+	text-align: center;
+	margin-bottom: 2.5rem;
+}
+
+.profile__header .profile__name {
+	font-size: 1.6rem;
+	font-weight: bold;
+	margin-bottom: 0.5rem;
+	color: #0097a7;
+}
+
+.profile__header .profile__info {
+	font-size: 1.2rem;
+	color: #666;
+}
+
+.profile-avatar {
+    width: 15rem;
+    height: 20rem;
+	margin: 0 auto 1rem;
+	position: relative;
+	overflow: hidden;
+	border-radius: 1rem;
+}
+
+.popup-avatar-swiper {
+	width: 100%;
+	height: 100%;
+}
+
+.popup-avatar-swiper .swiper-slide img {
+	width: 100%;
+	height: 100%;
 	object-fit: cover;
-	margin-bottom: 1rem;
+}
+
+.popup-avatar-swiper .swiper-pagination {
+	bottom: 0;
+	text-align: center;
+}
+
+/* 🔽 新增這段：profile-row 樣式，支援標題與資料分開 */
+.profile-card .profile-row {
+	margin-bottom: 1.2rem;
+	text-align: left;
+}
+
+.profile-card .profile-row .label {
+	font-weight: bold;
+	font-size: 1.2rem;
+	color: #0097a7;
+	margin-bottom: 0.2rem;
+}
+
+.profile-card .profile-row .value {
+	font-size: 1.2rem;
+	color: #333;
+	line-height: 1.5;
+	word-break: break-word;
 }
 
 /* 🔹 頂部選單區 */
@@ -647,8 +701,6 @@ html {
 	border-radius: 1rem;
 }
 
-
-
 /* ✅ 淡出動畫 */
 .fade-out {
 	animation: fadeOut 0.2s ease forwards;
@@ -662,29 +714,30 @@ html {
 }
 
 /* ✅ 定義 fadeOut 動畫 */
-@keyframes fadeOut {
-	from {
-		opacity: 1;
-		transform: scale(1);
-	}
-	to {
-		opacity: 0;
-		transform: scale(0.95);
-	}
+@
+keyframes fadeOut {from { opacity:1;
+	transform: scale(1);
+}
+
+to {
+	opacity: 0;
+	transform: scale(0.95);
+}
+
 }
 
 /* ✅ 定義 fadeIn 動畫 */
-@keyframes fadeIn {
-	from {
-		opacity: 0;
-		transform: scale(1.05);
-	}
-	to {
-		opacity: 1;
-		transform: scale(1);
-	}
+@
+keyframes fadeIn {from { opacity:0;
+	transform: scale(1.05);
 }
 
+to {
+	opacity: 1;
+	transform: scale(1);
+}
+
+}
 .chat-item.fade-in {
 	animation: fadeInMove 0.4s ease-out;
 }
@@ -739,14 +792,14 @@ to {
 .filter-btn-wrapper {
 	text-align: center;
 	display: flex;
-    justify-content: flex-end;
+	justify-content: flex-end;
 	width: 62rem;
 	margin: 1rem auto;
 }
 
-.filterBtn{
+.filterBtn {
 	background-color: #0097a7;
-    color: #fff;
+	color: #fff;
 	border: none;
 	padding: 0.6rem 1.2rem;
 	border-radius: 1.2rem;
@@ -756,7 +809,7 @@ to {
 }
 
 #filterModal {
-	display: none;	
+	display: none;
 }
 
 /* 彈窗背景遮罩 */
