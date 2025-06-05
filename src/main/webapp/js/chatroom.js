@@ -1,10 +1,11 @@
-const urlParams = new URLSearchParams(window.location.search);
-const currentUserId = parseInt(urlParams.get("currentUserId")) || null;
+//const urlParams = new URLSearchParams(window.location.search);
+//const currentUserId = parseInt(urlParams.get("currentUserId")) || null;
+//
+//if (!currentUserId) {
+//	alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
+//}
 
-if (!currentUserId) {
-	alert("⚠️ 無法取得 currentUserId，請確認網址格式是否正確！");
-}
-
+let currentUserId = null;
 let currentRoomId = null;
 let receiveId = null;
 let selectedImageFile = null;
@@ -17,9 +18,26 @@ let selectedImageFile = null;
 //	toggleBtn.classList.toggle('active');
 //}
 
+
+
+// 取得currentUserId
+fetch("ChatRoomControllerServlet?action=getCurrentUserId")
+  .then(res => {
+    if (!res.ok) throw new Error("尚未登入");
+    return res.json();
+  })
+  .then(data => {
+    currentUserId = data.currentUserId;
+	connectWebSocket(currentUserId);
+  })
+  .catch(err => {
+    alert("⚠️ 請先登入");
+    window.location.href = "login.html"; // 或其他導回首頁
+  });
+
 // 取得聊天室清單
 function loadChatRooms() {
-	fetch(`ChatRoomControllerServlet?action=list&currentUserId=${currentUserId}`)
+	fetch(`ChatRoomControllerServlet?action=list`)
 		.then(res => res.json())
 		.then(data => {
 			const ul = document.querySelector(".chat-list");
@@ -75,7 +93,7 @@ function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
 		headers: {
 			"Content-Type": "application/x-www-form-urlencoded"
 		},
-		body: `action=markAsRead&currentUserId=${currentUserId}&roomId=${roomId}`
+		body: `action=markAsRead&roomId=${roomId}`
 	})
 		.then(res => res.text())
 		.then(data => {
@@ -107,7 +125,10 @@ function handleRoomClick(roomId, peerName, peerId, peerAvatar) {
 				const container = document.getElementById("chatContent");
 				container.scrollTop = container.scrollHeight;
 			}, 0); // 0毫秒即可，等 call stack 清空＋DOM 更新
-
+	
+			document.querySelector(".chatroom__bar-userInfo").onclick = () => {
+							openProfile(peerId, peerName, peerAvatar);
+						};
 		})
 		.catch(err => {
 			console.error("取得訊息時出錯:", err);
@@ -244,8 +265,8 @@ function renderHistoryMessages(data, peerName, peerAvatar, peerId) {
 }
 
 // 彈出會員介紹視窗：顯示對方資訊
-function openProfile(userId, name, avatarSrc) {
-	console.log('openProfile 參數：', name);
+function openProfile(peerId, peerName, avatarSrc) {
+	console.log('openProfile 參數：',peerId, peerName);
 	// 1. 取得所有要更新的 DOM 元素
 	const popup = document.getElementById("profilePopup");
 	const popupAvatar = document.getElementById("popupAvatar");
@@ -256,7 +277,7 @@ function openProfile(userId, name, avatarSrc) {
 	const popupInterests = document.getElementById("popupInterests");
 	const popupIntro = document.getElementById("popupIntro");
 	// 3. 向後端抓更多使用者資訊
-	fetch(`ChatRoomControllerServlet?action=getUserProfile&currentUserId=${userId}`)
+	fetch(`ChatRoomControllerServlet?action=getUserProfile&peerId=${peerId}`)
 		.then(res => res.json())
 		.then(profile => {
 			// ✅ 如果已經是 base64 或完整路徑，直接用
@@ -389,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
 			sendMessage();
 		}
 	});
-	connectWebSocket(currentUserId);
 });
 // 綁定點擊事件，點圖示時觸發檔案選擇
 document.getElementById("uploadImageBtn").addEventListener("click", function() {
@@ -449,49 +469,6 @@ document.getElementById("imageInput").addEventListener("change", function(event)
 	}
 });
 
-//document.getElementById("imageInput").addEventListener("change", function(event) {
-//	const file = event.target.files[0];
-//	if (!file) return;	
-//	// 1. 顯示圖片（reader） ✅
-//	const reader = new FileReader();
-//	reader.onload = function(e) {
-//		const imageBase64 = e.target.result;
-//		// 即時畫面用這個
-//		const container = document.getElementById("chatContent");
-//		const el = document.createElement("div");
-//		el.className = "message right";		
-//		// 宣告時間字串
-//		const timeStr = getTimeString();
-//			
-//		el.innerHTML = `
-//		    <div class="bubble-block">
-//		      
-//			  	<img src="${imageBase64}" class="chat-img" style="max-width: 200px; border-radius: 8px;" />
-//			  
-//			  <div class="time-label">${timeStr}</div>
-//		    </div>
-//		  `;
-//		container.appendChild(el);
-//		container.scrollTop = container.scrollHeight;
-//		// 2. 真正送去後端的是「檔案本體」
-//		const formData = new FormData();
-//		formData.append("roomId", currentRoomId);
-//		formData.append("senderId", currentUserId);
-//		formData.append("content", ""); // 如果是純圖片，可留空或補上說明文字
-//		formData.append("img", file); // ✅ 傳原始檔案！
-//
-//		fetch("ChatRoomControllerServlet?action=send", {
-//			method: "POST",
-//			body: formData, // 自動帶 multipart/form-data
-//		});
-//		// 3. 用 WebSocket 傳送圖片（加上標示 image: 前綴）
-//		if (socket && socket.readyState === WebSocket.OPEN) {
-//			const encodedImage = encodeURIComponent(imageBase64);
-//			socket.send(`${currentRoomId}|${currentUserId}|image:${encodedImage}`);
-//		}
-//	};
-//	reader.readAsDataURL(file);
-//});
 // 將資料庫中的 sent_time 時間字串格式化為「時:分」的本地時間
 function formatTime(dateTimeStr) {
 	const date = new Date(dateTimeStr);
@@ -513,10 +490,10 @@ function getTimeString() {
 function createMessageElement({ isMe, content = "", imageBase64 = null, timeStr, avatarUrl = "", peerId = "", peerName = "", isRead = false }) {
 	const el = document.createElement("div");
 	el.className = "message " + (isMe ? "right" : "left");
-
+	
 	const bubbleBlock = document.createElement("div");
 	bubbleBlock.className = "bubble-block";
-
+	
 	// ✅ 文字 or 圖片內容
 	if (imageBase64) {
 		const img = document.createElement("img");
@@ -582,9 +559,6 @@ function createMessageElement({ isMe, content = "", imageBase64 = null, timeStr,
 		el.appendChild(bubbleBlock);
 	}
 
-
-	document.querySelector(".chatroom__bar-userInfo").onclick = () =>
-		openProfile(peerId, peerName, avatarUrl);
 	return el;
 }
 

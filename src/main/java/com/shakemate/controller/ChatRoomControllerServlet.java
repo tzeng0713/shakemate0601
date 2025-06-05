@@ -18,6 +18,7 @@ import com.shakemate.model.ChatRoomDAO;
 import com.shakemate.model.ChatRoomDAOImpl;
 import com.shakemate.model.UserProfileDAO;
 import com.shakemate.model.UserProfileDAOImpl;
+import com.shakemate.util.SessionUtil;
 import com.shakemate.util.Util;
 
 import jakarta.servlet.ServletException;
@@ -38,13 +39,16 @@ public class ChatRoomControllerServlet extends HttpServlet {
 			throws ServletException, IOException {
 
 		String action = req.getParameter("action");
-
+		HttpSession session = req.getSession(); 
+//      int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
+		Integer currentUserId = Integer.valueOf(session.getAttribute("account").toString());
 		
 		try {
 		    switch (action) {
 		        case "list" -> handleChatRoomList(req, res);
 		        case "getMessages" -> handleGetMessages(req, res);
 		        case "getUserProfile" -> handleGetUserProfile(req, res);
+		        case "getCurrentUserId" -> handleGetCurrentUserId(req, res);
 		        default -> res.sendError(HttpServletResponse.SC_BAD_REQUEST, "未知的 action 參數");
 		    }
 		} catch (Exception e) {
@@ -54,9 +58,19 @@ public class ChatRoomControllerServlet extends HttpServlet {
 		
 	}
 	
+	private void handleGetCurrentUserId(HttpServletRequest req, HttpServletResponse res) throws IOException {
+		Integer currentUserId = SessionUtil.getCurrentUserId(req);
+		
+		res.setContentType("application/json");
+		res.setCharacterEncoding("UTF-8");
 
-	
-
+		if (currentUserId == null) {
+			res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+			res.getWriter().write("{\"error\": \"尚未登入\"}");
+		} else {
+			res.getWriter().write("{\"currentUserId\": " + currentUserId + "}");
+		}
+	}
 
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 	        throws ServletException, IOException {
@@ -80,16 +94,18 @@ public class ChatRoomControllerServlet extends HttpServlet {
 	
 	private void handleChatRoomList(HttpServletRequest req, HttpServletResponse res)
 			throws IOException {
-		String userIdStr = req.getParameter("currentUserId");
-		if (userIdStr == null) {
-			res.sendError(HttpServletResponse.SC_BAD_REQUEST, "缺少 currentUserId 參數");
-			return;
-		}
-		int userId = Integer.parseInt(userIdStr);
-
+//		String userIdStr = req.getParameter("currentUserId");
+//		if (userIdStr == null) {
+//			res.sendError(HttpServletResponse.SC_BAD_REQUEST, "缺少 currentUserId 參數");
+//			return;
+//		}
+		HttpSession session = req.getSession(); 
+//      int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
+		Integer currentUserId = Integer.valueOf(session.getAttribute("account").toString());
+		
 		// 呼叫 DAO
 		ChatRoomDAO dao = new ChatRoomDAOImpl();
-		List<ChatRoomVO> list = dao.findByUserId(userId);
+		List<ChatRoomVO> list = dao.findByUserId(currentUserId);
 
 		// 回傳 JSON
 		Gson gson = new Gson();
@@ -166,18 +182,18 @@ public class ChatRoomControllerServlet extends HttpServlet {
 	
 	private void handleGetUserProfile(HttpServletRequest req, HttpServletResponse res)
 			throws IOException {
-	    String userIdStr = req.getParameter("currentUserId");
+	    String peerIdStr = req.getParameter("peerId");
 
-	    if (userIdStr == null) {
+	    if (peerIdStr == null) {
 	        res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 	    }
 
 	    try {
-	        int userId = Integer.parseInt(userIdStr);
+	        int peerId = Integer.parseInt(peerIdStr);
 
 	        // 呼叫 DAO
 	        UserProfileDAO dao = new UserProfileDAOImpl();
-	        UserProfileVO vo = dao.findById(userId);
+	        UserProfileVO vo = dao.findById(peerId);
 
 	        if (vo == null) {
 	            res.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -201,20 +217,22 @@ public class ChatRoomControllerServlet extends HttpServlet {
 	// 處理訊息被已讀的情況
 	private void handleMarkAsRead(HttpServletRequest req, HttpServletResponse res)
 			throws IOException {
-		String userIdStr = req.getParameter("currentUserId");
+//		String userIdStr = req.getParameter("currentUserId");
 		String roomIdStr = req.getParameter("roomId");
-		
-		if (userIdStr == null || roomIdStr == null) {
-	        res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-	        return;
-	    }
-		
-		int userId = Integer.parseInt(userIdStr);
+//		
+//		if (userIdStr == null || roomIdStr == null) {
+//	        res.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+//	        return;
+//	    }
+		HttpSession session = req.getSession(); 
+		Integer currentUserId = Integer.valueOf(session.getAttribute("account").toString());
+
+//		int userId = Integer.parseInt(userIdStr);
 		int roomId = Integer.parseInt(roomIdStr);
 		
 		try {
 			ChatMessageDAO dao = new ChatMessageDAOImpl();
-			dao.markMessagesAsRead(userId, roomId);
+			dao.markMessagesAsRead(currentUserId, roomId);
 			res.getWriter().write("success");
 		} catch (SQLException e) {
 			e.printStackTrace();

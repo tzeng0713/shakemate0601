@@ -25,14 +25,7 @@ public class MatchControllerServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
         String action = req.getParameter("action");
-		HttpSession session = req.getSession();
-        Integer userId = Integer.valueOf(session.getAttribute("account").toString());
-
-        
-//        req.getParameterMap().forEach((key, value) ->
-//        System.out.println("📦 key: [" + key + "] → " + Arrays.toString(value))
-//    );
-
+		HttpSession session = req.getSession(); 
 //        int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
 		Integer currentUserId = Integer.valueOf(session.getAttribute("account").toString());
         
@@ -69,7 +62,11 @@ public class MatchControllerServlet extends HttpServlet {
 
     protected void doPost(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
-
+    	
+		HttpSession session = req.getSession(); 
+//      int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
+		Integer currentUserId = Integer.valueOf(session.getAttribute("account").toString());
+    	
         // 如果是 JSON → 處理條件篩選
         if ("application/json".equals(req.getContentType())) {
         	System.out.println("hi");
@@ -85,7 +82,7 @@ public class MatchControllerServlet extends HttpServlet {
 
             String action = (String) data.get("action");
             if ("getFiltered".equals(action)) {
-                int currentUserId = ((Double) data.get("currentUserId")).intValue();
+//                int currentUserId = ((Double) data.get("currentUserId")).intValue();
                 Integer gender = null;
                 try {
                     String genderStr = (String) data.get("gender");
@@ -111,7 +108,7 @@ public class MatchControllerServlet extends HttpServlet {
 
         // 如果不是 JSON → 處理 like/dislike（維持你原本的寫法）
         String action = req.getParameter("action");
-        int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
+//        int currentUserId = Integer.parseInt(req.getParameter("currentUserId"));
         int targetId = Integer.parseInt(req.getParameter("targetId"));
 
         MatchService service = new MatchService();
